@@ -1,0 +1,107 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Login - SmartLecture AI{% endblock %}
+
+{% block auth_content %}
+<div class="auth-container">
+    <div class="auth-card">
+        <!-- Header -->
+        <div class="auth-header">
+            <div class="auth-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M22 10v6M2 10l10-5 10 5-10 5z"></path>
+                    <path d="M6 12v5c3 3 9 3 12 0v-5"></path>
+                </svg>
+            </div>
+            <h1 class="auth-title">SmartLecture AI</h1>
+            <p class="auth-subtitle">Sign in to continue</p>
+        </div>
+
+        <!-- Login Form -->
+        <form method="post" action="{% url 'login' %}" class="auth-form" id="loginForm">
+            {% csrf_token %}
+            
+            {% if messages %}
+                {% for message in messages %}
+                    <div class="alert alert-{{ message.tags }}">
+                        {{ message }}
+                    </div>
+                {% endfor %}
+            {% endif %}
+
+            <!-- Role Selection -->
+            <div class="form-group">
+                <label class="form-label">Select Role</label>
+                <div class="role-selector">
+                    <input type="radio" name="role" value="teacher" id="role_teacher" required>
+                    <label for="role_teacher" class="role-btn">Teacher</label>
+                    
+                    <input type="radio" name="role" value="student" id="role_student" required>
+                    <label for="role_student" class="role-btn">Student</label>
+                </div>
+                <span class="error-message" id="roleError"></span>
+            </div>
+
+            <!-- Email Field -->
+            <div class="form-group">
+                <label for="email" class="form-label">Email Address</label>
+                <div class="input-wrapper">
+                    <svg class="input-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                        <circle cx="12" cy="7" r="4"></circle>
+                    </svg>
+                    <input 
+                        type="email" 
+                        id="email" 
+                        name="email" 
+                        class="form-input" 
+                        placeholder="you@example.com"
+                        value="{{ form.email.value|default:'' }}"
+                        required
+                    >
+                </div>
+                <span class="error-message" id="emailError"></span>
+            </div>
+
+            <!-- Password Field -->
+            <div class="form-group">
+                <label for="password" class="form-label">Password</label>
+                <div class="input-wrapper">
+                    <svg class="input-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+                        <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+                    </svg>
+                    <input 
+                        type="password" 
+                        id="password" 
+                        name="password" 
+                        class="form-input" 
+                        placeholder="••••••••"
+                        required
+                    >
+                </div>
+                <span class="error-message" id="passwordError"></span>
+            </div>
+
+            <!-- Submit Button -->
+            <button type="submit" class="btn btn-primary btn-block">
+                Sign In
+            </button>
+
+            <div style="text-align: center; margin-top: 12px;">
+                <a href="{% url 'forgot_password' %}" style="font-size: 0.875rem; color: var(--color-gray-600); text-decoration: none;">
+                    Forgot password?
+                </a>
+            </div>
+        </form>
+
+        <div class="auth-footer">
+            <p class="text-muted">Don't have an account? <a href="{% url 'register' %}">Register</a></p>
+        </div>
+    </div>
+</div>
+
+<!-- <script src="{% static 'js/validation.js' %}"></script> -->
+
+{% endblock %}

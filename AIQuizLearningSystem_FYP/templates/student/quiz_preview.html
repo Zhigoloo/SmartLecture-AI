@@ -1,0 +1,96 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{{ quiz.title }} - Start Quiz{% endblock %}
+
+{% block content %}
+<div class="page-container" style="max-width: 600px; margin: 0 auto;">
+
+    <!-- Quiz Info Card -->
+    <div class="card" style="padding: 40px 32px; text-align: center; margin-bottom: 24px;">
+        <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="var(--color-primary)" stroke-width="1.5" style="margin-bottom: 16px;">
+            <path d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2"></path>
+            <rect x="9" y="3" width="6" height="4" rx="2"></rect>
+            <path d="M9 14l2 2 4-4"></path>
+        </svg>
+
+        <h2 style="font-size: 1.5rem; font-weight: 700; margin-bottom: 8px;">{{ quiz.title }}</h2>
+        <p class="text-muted" style="margin-bottom: 24px;">by {{ quiz.teacher.get_full_name|default:quiz.teacher.username }}</p>
+
+        <!-- Quiz Details -->
+        <div style="display: flex; justify-content: center; gap: 32px; margin-bottom: 32px;">
+            <div>
+                <div style="font-size: 1.5rem; font-weight: 700; color: var(--color-primary);">{{ question_count }}</div>
+                <div class="text-muted" style="font-size: 0.85rem;">Questions</div>
+            </div>
+            <div style="border-left: 1px solid var(--color-gray-200);"></div>
+            <div>
+                <div style="font-size: 1.5rem; font-weight: 700; color: var(--color-primary);">{{ quiz.time_limit }}</div>
+                <div class="text-muted" style="font-size: 0.85rem;">Minutes</div>
+            </div>
+            <div style="border-left: 1px solid var(--color-gray-200);"></div>
+            <div>
+                <div style="font-size: 1.5rem; font-weight: 700; color: var(--color-primary);">{{ quiz.pass_percentage }}%</div>
+                <div class="text-muted" style="font-size: 0.85rem;">To Pass</div>
+            </div>
+        </div>
+
+        <!-- Instructions -->
+        <div style="text-align: left; background: var(--color-gray-50); border-radius: var(--border-radius-lg); padding: 16px 20px; margin-bottom: 28px;">
+            <p style="font-weight: 600; font-size: 0.9rem; margin-bottom: 8px;">Before you start:</p>
+            <ul style="list-style: none; padding: 0; display: flex; flex-direction: column; gap: 6px; font-size: 0.85rem; color: var(--color-gray-600);">
+                <li>
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--color-success)" stroke-width="2" style="vertical-align: middle; margin-right: 6px;"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                    Answer all questions before submitting
+                </li>
+                <li>
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--color-success)" stroke-width="2" style="vertical-align: middle; margin-right: 6px;"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                    You have {{ quiz.time_limit }} minutes to complete the quiz
+                </li>
+                <li>
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--color-success)" stroke-width="2" style="vertical-align: middle; margin-right: 6px;"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                    You can navigate between questions freely
+                </li>
+                <li>
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--color-warning)" stroke-width="2" style="vertical-align: middle; margin-right: 6px;"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                    You cannot change answers after submission
+                </li>
+            </ul>
+        </div>
+
+        <!-- Action Buttons -->
+        <div style="display: flex; gap: 12px; justify-content: center;">
+            <a href="{% url 'student:dashboard' %}" class="btn btn-outline">Back to Dashboard</a>
+            <a href="{% url 'student:quiz' quiz.id %}" class="btn btn-primary" style="padding: 12px 32px; font-size: 1rem;">
+                Start Quiz
+            </a>
+        </div>
+    </div>
+
+    <!-- Previous Attempts -->
+    {% if previous_attempts %}
+    <div class="card">
+        <div class="card-header" style="padding: 16px 24px;">
+            <h3 class="card-title" style="font-size: 1rem;">Your Previous Attempts</h3>
+        </div>
+        <div style="padding: 0 24px 16px;">
+            {% for attempt in previous_attempts %}
+            <div style="display: flex; justify-content: space-between; align-items: center; padding: 12px 0; {% if not forloop.last %}border-bottom: 1px solid var(--color-gray-100);{% endif %}">
+                <div>
+                    <span class="text-muted" style="font-size: 0.85rem;">{{ attempt.started_at|date:"M d, Y - H:i" }}</span>
+                </div>
+                <div style="display: flex; align-items: center; gap: 12px;">
+                    <span style="font-weight: 600;">{{ attempt.percentage }}%</span>
+                    {% if attempt.percentage >= 70 %}
+                    <span class="badge badge-success" style="font-size: 0.75rem;">Passed</span>
+                    {% else %}
+                    <span class="badge badge-error" style="font-size: 0.75rem;">Failed</span>
+                    {% endif %}
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

@@ -1,0 +1,186 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Student Dashboard - SmartLecture AI{% endblock %}
+
+{% block content %}
+<div class="page-container" style="max-width: 720px; margin: 0 auto;">
+
+    <!-- Join Quiz Section -->
+    <div class="card" style="padding: 40px 32px; text-align: center; margin-bottom: 32px;">
+        <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="var(--color-primary)" stroke-width="1.5" style="margin-bottom: 16px;">
+            <path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"></path>
+            <polyline points="10 17 15 12 10 7"></polyline>
+            <line x1="15" y1="12" x2="3" y2="12"></line>
+        </svg>
+        <h2 style="font-size: 1.5rem; font-weight: 700; margin-bottom: 4px;">Join a Quiz</h2>
+        <p class="text-muted" style="margin-bottom: 24px;">Enter an access code <em>or</em> paste a share link from your teacher</p>
+
+        <form method="post" action="{% url 'student:dashboard' %}" id="joinForm">
+            {% csrf_token %}
+            <div style="display: flex; gap: 12px; max-width: 520px; margin: 0 auto;">
+                <input
+                    type="text"
+                    name="access_code"
+                    id="joinInput"
+                    placeholder="Code (e.g. ABC123) or paste share link"
+                    style="flex: 1; padding: 12px 16px; font-size: 0.95rem; border: 2px solid var(--color-gray-200); border-radius: var(--border-radius-lg); outline: none; transition: border-color 0.2s;"
+                    onfocus="this.style.borderColor='var(--color-primary)'"
+                    onblur="this.style.borderColor='var(--color-gray-200)'"
+                    autocomplete="off"
+                    required>
+                <button type="submit" class="btn btn-primary" style="padding: 12px 24px; font-size: 1rem; white-space: nowrap;">
+                    Join Quiz
+                </button>
+            </div>
+        </form>
+
+        {% if error_message %}
+        <div style="margin-top: 16px; padding: 10px 16px; background: #fef2f2; color: var(--color-error); border-radius: var(--border-radius); font-size: 0.875rem; display: inline-block;">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align: middle; margin-right: 4px;">
+                <circle cx="12" cy="12" r="10"></circle>
+                <line x1="15" y1="9" x2="9" y2="15"></line>
+                <line x1="9" y1="9" x2="15" y2="15"></line>
+            </svg>
+            {{ error_message }}
+        </div>
+        {% endif %}
+    </div>
+
+    <!-- Practice Basket (only shown when there are items) -->
+    {% if basket_count > 0 %}
+    <div class="card" style="margin-bottom: 24px; border-left: 4px solid var(--color-primary);">
+        <div class="card-header" style="padding: 16px 24px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px;">
+            <div>
+                <h3 class="card-title" style="font-size: 1rem; margin: 0; display: flex; align-items: center; gap: 8px;">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--color-primary)" stroke-width="2">
+                        <circle cx="9" cy="21" r="1"></circle>
+                        <circle cx="20" cy="21" r="1"></circle>
+                        <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"></path>
+                    </svg>
+                    Practice Basket
+                </h3>
+                <p class="text-muted" style="font-size: 0.8rem; margin: 4px 0 0;">
+                    {{ basket_count }} question{{ basket_count|pluralize }} selected across {{ basket_summary|length }} quiz{{ basket_summary|length|pluralize:"zes" }}
+                </p>
+            </div>
+            <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+                <form method="post" action="{% url 'student:practice_basket_clear' %}" style="display: inline;">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-outline" style="font-size: 0.85rem;"
+                            onclick="return confirm('Clear all questions from your practice basket?');">
+                        Clear All
+                    </button>
+                </form>
+                <a href="{% url 'student:combined_practice' %}" class="btn btn-primary" style="font-size: 0.85rem;">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <polygon points="5 3 19 12 5 21 5 3"></polygon>
+                    </svg>
+                    Start Practice
+                </a>
+            </div>
+        </div>
+        <div style="padding: 12px 24px 16px;">
+            {% for item in basket_summary %}
+            <div style="display: flex; justify-content: space-between; padding: 6px 0; font-size: 0.85rem; {% if not forloop.last %}border-bottom: 1px solid var(--color-gray-100);{% endif %}">
+                <span>{{ item.quiz_title }}</span>
+                <span class="text-muted">{{ item.count }} question{{ item.count|pluralize }}</span>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- My Quizzes Section -->
+    <div class="card">
+        <div class="card-header" style="padding: 16px 24px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px;">
+            <h3 class="card-title" style="font-size: 1.1rem; margin: 0;">My Quizzes</h3>
+            {% if quiz_summaries %}
+            <div style="position: relative; min-width: 200px;">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--color-gray-400)" stroke-width="2"
+                     style="position: absolute; left: 10px; top: 50%; transform: translateY(-50%); pointer-events: none;">
+                    <circle cx="11" cy="11" r="8"></circle>
+                    <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                </svg>
+                <input type="text" id="quizSearch" placeholder="Search quizzes..."
+                       style="width: 100%; padding: 8px 12px 8px 32px; font-size: 0.85rem; border: 1px solid var(--color-gray-200); border-radius: var(--border-radius); outline: none; transition: border-color 0.2s;"
+                       onfocus="this.style.borderColor='var(--color-primary)'"
+                       onblur="this.style.borderColor='var(--color-gray-200)'"
+                       oninput="filterQuizzes()">
+            </div>
+            {% endif %}
+        </div>
+
+        {% if quiz_summaries %}
+        <div style="padding: 0;">
+            {% for item in quiz_summaries %}
+            <a href="{% url 'student:quiz_history' item.quiz.id %}"
+               class="quiz-row"
+               data-title="{{ item.quiz.title|lower }}"
+               style="display: flex; justify-content: space-between; align-items: center; padding: 16px 24px; text-decoration: none; color: inherit; transition: background 0.15s; {% if not forloop.last %}border-bottom: 1px solid var(--color-gray-100);{% endif %}"
+               onmouseover="this.style.background='var(--color-gray-50)'"
+               onmouseout="this.style.background='transparent'">
+                <!-- Left: Quiz info -->
+                <div style="flex: 1; min-width: 0;">
+                    <p class="font-medium" style="margin-bottom: 4px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">{{ item.quiz.title }}</p>
+                    <div style="display: flex; gap: 16px; font-size: 0.8rem;" class="text-muted">
+                        <span>{{ item.attempt_count }} attempt{{ item.attempt_count|pluralize }}</span>
+                        <span>Last: {{ item.last_attempt|date:"M d, Y" }}</span>
+                    </div>
+                </div>
+                <!-- Right: Best score + arrow -->
+                <div style="display: flex; align-items: center; gap: 12px; flex-shrink: 0;">
+                    <div style="text-align: right;">
+                        <span style="font-size: 1.1rem; font-weight: 700; color: {% if item.passed %}var(--color-success){% else %}var(--color-gray-600){% endif %};">{{ item.best_score }}%</span>
+                        <div style="font-size: 0.75rem;" class="text-muted">best score</div>
+                    </div>
+                    {% if item.passed %}
+                    <span class="badge badge-success" style="font-size: 0.7rem;">Passed</span>
+                    {% else %}
+                    <span class="badge badge-error" style="font-size: 0.7rem;">Not passed</span>
+                    {% endif %}
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--color-gray-400)" stroke-width="2">
+                        <polyline points="9 18 15 12 9 6"></polyline>
+                    </svg>
+                </div>
+            </a>
+            {% endfor %}
+            <div id="noSearchResults" style="display: none; padding: 32px 24px; text-align: center;">
+                <p class="text-muted">No quizzes match your search.</p>
+            </div>
+        </div>
+        {% else %}
+        <div style="padding: 48px 24px; text-align: center;">
+            <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="var(--color-gray-300)" stroke-width="1.5" style="margin-bottom: 12px;">
+                <path d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2"></path>
+                <rect x="9" y="3" width="6" height="4" rx="2"></rect>
+            </svg>
+            <p class="text-muted">No quiz attempts yet.</p>
+            <p class="text-muted" style="font-size: 0.85rem;">Enter an access code above to get started!</p>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<script>
+function filterQuizzes() {
+    var query = document.getElementById('quizSearch').value.toLowerCase();
+    var rows = document.querySelectorAll('.quiz-row');
+    var visibleCount = 0;
+    rows.forEach(function(row) {
+        var title = row.getAttribute('data-title');
+        if (title.indexOf(query) !== -1) {
+            row.style.display = 'flex';
+            visibleCount++;
+        } else {
+            row.style.display = 'none';
+        }
+    });
+    // Show/hide no results message
+    var noResults = document.getElementById('noSearchResults');
+    if (noResults) {
+        noResults.style.display = visibleCount === 0 && query ? 'block' : 'none';
+    }
+}
+</script>
+{% endblock %}

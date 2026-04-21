@@ -1,0 +1,194 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{{ quiz.title }} - Attempt History{% endblock %}
+
+{% block content %}
+<div class="page-container" style="max-width: 720px; margin: 0 auto;">
+
+    <!-- Back link -->
+    <a href="{% url 'student:dashboard' %}" style="display: inline-flex; align-items: center; gap: 6px; text-decoration: none; color: var(--color-gray-500); font-size: 0.85rem; margin-bottom: 16px;">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <polyline points="15 18 9 12 15 6"></polyline>
+        </svg>
+        Back to Dashboard
+    </a>
+
+    <!-- Quiz Header Card -->
+    <div class="card" style="padding: 28px 24px; margin-bottom: 24px;">
+        <div style="display: flex; justify-content: space-between; align-items: start; flex-wrap: wrap; gap: 16px;">
+            <div>
+                <h2 style="font-size: 1.4rem; font-weight: 700; margin-bottom: 6px;">{{ quiz.title }}</h2>
+                <p class="text-muted" style="font-size: 0.85rem;">by {{ quiz.teacher.get_full_name|default:quiz.teacher.username }}</p>
+            </div>
+            {% if quiz.status == 'published' %}
+            <a href="{% url 'student:quiz_preview' quiz.id %}" class="btn btn-primary">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <polyline points="23 4 23 10 17 10"></polyline>
+                    <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"></path>
+                </svg>
+                Retake Quiz
+            </a>
+            {% endif %}
+        </div>
+
+        <!-- Stats -->
+        <div style="display: flex; gap: 32px; margin-top: 20px; padding-top: 20px; border-top: 1px solid var(--color-gray-100);">
+            <div>
+                <div style="font-size: 1.5rem; font-weight: 700; color: var(--color-primary);">{{ total_attempts }}</div>
+                <div class="text-muted" style="font-size: 0.8rem;">Total Attempts</div>
+            </div>
+            <div>
+                <div style="font-size: 1.5rem; font-weight: 700; color: var(--color-success);">{{ best_score }}%</div>
+                <div class="text-muted" style="font-size: 0.8rem;">Best Score</div>
+            </div>
+            <div>
+                <div style="font-size: 1.5rem; font-weight: 700; color: var(--color-gray-600);">{{ quiz.pass_percentage }}%</div>
+                <div class="text-muted" style="font-size: 0.8rem;">Pass Mark</div>
+            </div>
+            <div>
+                <div style="font-size: 1.5rem; font-weight: 700; color: var(--color-gray-600);">{{ quiz.time_limit }}m</div>
+                <div class="text-muted" style="font-size: 0.8rem;">Time Limit</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Practice Incorrect Questions -->
+    {% if incorrect_questions %}
+    <div class="card" style="margin-bottom: 24px; border-left: 4px solid var(--color-warning);">
+        <div class="card-header" style="padding: 16px 24px;">
+            <h3 class="card-title" style="font-size: 1rem; margin: 0;">Practice Questions</h3>
+            <p class="text-muted" style="font-size: 0.8rem; margin: 4px 0 0;">
+                Pick the questions you want to redo. Practice attempts don't affect your best score.
+            </p>
+        </div>
+        <form method="post" action="{% url 'student:practice_quiz' quiz.id %}" id="practiceForm">
+            {% csrf_token %}
+            <div style="padding: 8px 24px 0;">
+                <label style="display: flex; align-items: center; gap: 8px; padding: 8px 0; cursor: pointer; font-size: 0.85rem; color: var(--color-gray-600);">
+                    <input type="checkbox" id="selectAllIncorrect" style="accent-color: var(--color-primary); width: 16px; height: 16px;">
+                    <span>Select all incorrect questions ({{ incorrect_questions|length }})</span>
+                </label>
+            </div>
+            <div style="padding: 0 24px; max-height: 320px; overflow-y: auto;">
+                {% for q in incorrect_questions %}
+                <label style="display: flex; align-items: flex-start; gap: 12px; padding: 12px 0; cursor: pointer; border-top: 1px solid var(--color-gray-100);">
+                    <input type="checkbox" name="question_ids" value="{{ q.id }}" class="practice-qbox"
+                           style="accent-color: var(--color-primary); width: 16px; height: 16px; margin-top: 3px;">
+                    <span style="flex: 1; font-size: 0.9rem;">
+                        <span style="color: var(--color-primary); font-weight: 600;">Q{{ q.order }}.</span>
+                        {{ q.text }}
+                    </span>
+                </label>
+                {% endfor %}
+            </div>
+            <div style="padding: 16px 24px; border-top: 1px solid var(--color-gray-100); display: flex; justify-content: flex-end; gap: 8px; flex-wrap: wrap;">
+                <button type="submit" formaction="{% url 'student:practice_basket_add' quiz.id %}" class="btn btn-outline" id="addToBasketBtn" disabled>
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <circle cx="9" cy="21" r="1"></circle>
+                        <circle cx="20" cy="21" r="1"></circle>
+                        <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"></path>
+                    </svg>
+                    Add to Basket
+                </button>
+                <button type="submit" class="btn btn-primary" id="startPracticeBtn" disabled>
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <polygon points="5 3 19 12 5 21 5 3"></polygon>
+                    </svg>
+                    Start Practice
+                </button>
+            </div>
+        </form>
+    </div>
+    {% endif %}
+
+    <!-- Attempt History -->
+    <div class="card">
+        <div class="card-header" style="padding: 16px 24px;">
+            <h3 class="card-title" style="font-size: 1rem;">Attempt History</h3>
+        </div>
+
+        <div class="table-container">
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>#</th>
+                        <th class="text-center">Score</th>
+                        <th class="text-center">Percentage</th>
+                        <th class="text-center">Result</th>
+                        <th class="text-center">Date</th>
+                        <th class="text-center">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for attempt in attempts %}
+                    <tr>
+                        <td class="text-muted">{{ forloop.revcounter }}</td>
+                        <td class="text-center">
+                            <span style="font-weight: 600;">{{ attempt.score }}/{{ attempt.total_questions }}</span>
+                        </td>
+                        <td class="text-center">
+                            <span style="font-weight: 600;">{{ attempt.percentage }}%</span>
+                        </td>
+                        <td class="text-center">
+                            {% if attempt.percentage >= quiz.pass_percentage %}
+                            <span class="badge badge-success">Passed</span>
+                            {% else %}
+                            <span class="badge badge-error">Failed</span>
+                            {% endif %}
+                        </td>
+                        <td class="text-center text-muted">{{ attempt.started_at|date:"M d, Y H:i" }}</td>
+                        <td class="text-center">
+                            <a href="{% url 'student:results' quiz.id attempt.id %}" class="btn-icon" title="View Results">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16">
+                                    <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                                    <circle cx="12" cy="12" r="3"></circle>
+                                </svg>
+                            </a>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<script>
+(function() {
+    var boxes = document.querySelectorAll('.practice-qbox');
+    var selectAll = document.getElementById('selectAllIncorrect');
+    var startBtn = document.getElementById('startPracticeBtn');
+    var basketBtn = document.getElementById('addToBasketBtn');
+    if (!boxes.length || !startBtn) return;
+
+    function updateBtn() {
+        var anyChecked = Array.prototype.some.call(boxes, function(b) { return b.checked; });
+        startBtn.disabled = !anyChecked;
+        startBtn.style.opacity = anyChecked ? '1' : '0.5';
+        if (basketBtn) {
+            basketBtn.disabled = !anyChecked;
+            basketBtn.style.opacity = anyChecked ? '1' : '0.5';
+        }
+    }
+
+    boxes.forEach(function(b) {
+        b.addEventListener('change', function() {
+            updateBtn();
+            if (selectAll) {
+                var allChecked = Array.prototype.every.call(boxes, function(x) { return x.checked; });
+                selectAll.checked = allChecked;
+            }
+        });
+    });
+
+    if (selectAll) {
+        selectAll.addEventListener('change', function() {
+            boxes.forEach(function(b) { b.checked = selectAll.checked; });
+            updateBtn();
+        });
+    }
+    updateBtn();
+})();
+</script>
+{% endblock %}

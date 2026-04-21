@@ -1,0 +1,56 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}SmartLecture AI{% endblock %}</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{% static 'css/styles.css' %}">
+    {% block extra_css %}{% endblock %}
+    <script>
+        // Apply the saved theme BEFORE the body renders to avoid a flash
+        (function() {
+            try {
+                var saved = localStorage.getItem('theme');
+                var preferred = saved || (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+                if (preferred === 'dark') {
+                    document.documentElement.setAttribute('data-theme', 'dark');
+                }
+            } catch (e) { /* ignore */ }
+        })();
+    </script>
+</head>
+<body>
+    {% if user.is_authenticated %}
+        {% include 'components/navbar.html' %}
+        
+       <div class="app-container">
+    {% if show_sidebar %}
+        {% include 'components/sidebar_teacher.html' %}
+    {% endif %}
+
+            
+            <main class="{% if show_sidebar %}main-content{% else %}main-content-full{% endif %}">
+                {% if messages %}
+  <div class="page-container" style="margin-top: 16px;">
+    {% for message in messages %}
+      <div class="alert alert-{{ message.tags }}">{{ message }}</div>
+    {% endfor %}
+  </div>
+{% endif %}
+
+                {% block content %}{% endblock %}
+            </main>
+        </div>
+    {% else %}
+        {% include 'components/theme_toggle.html' with floating=True %}
+        {% block auth_content %}{% endblock %}
+    {% endif %}
+    
+    <script src="{% static 'js/main.js' %}"></script>
+    {% block extra_js %}{% endblock %}
+</body>
+</html>

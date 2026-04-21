@@ -1,0 +1,67 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Practice Results - {{ quiz.title }}{% endblock %}
+
+{% block content %}
+<div class="page-container" style="max-width: 900px; margin: 0 auto;">
+    <div style="margin-bottom: 12px;">
+        <span class="badge badge-draft">Practice Mode</span>
+    </div>
+    <h2 class="page-title">Practice Results</h2>
+    <p class="page-subtitle">{{ quiz.title }}</p>
+
+    <!-- Score Card -->
+    <div class="card" style="padding: 32px; text-align: center; margin: 20px 0 24px;">
+        <div style="font-size: 3rem; font-weight: 700; color: {% if percentage >= 70 %}var(--color-success){% else %}var(--color-warning){% endif %}; margin-bottom: 8px;">
+            {{ percentage }}%
+        </div>
+        <p style="font-size: 1.1rem; margin-bottom: 4px;">
+            {{ score }} out of {{ total_questions }} correct
+        </p>
+        <p class="text-muted" style="margin-top: 8px; font-size: 0.85rem;">
+            Practice results are not saved to your history.
+        </p>
+    </div>
+
+    <!-- Question Breakdown -->
+    <div class="card">
+        <div class="card-header">
+            <h3 class="card-title">Question Breakdown</h3>
+        </div>
+
+        <div style="padding: 16px; display: flex; flex-direction: column; gap: 16px;">
+            {% for item in question_results %}
+            <div style="padding: 16px; border: 1px solid {% if item.is_correct %}var(--color-success){% else %}var(--color-error){% endif %}; border-radius: var(--border-radius-lg); border-left-width: 4px;">
+                <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 8px;">
+                    <p style="font-weight: 500;">{{ item.question.text }}</p>
+                    <span class="badge {% if item.is_correct %}badge-success{% else %}badge-error{% endif %}" style="white-space: nowrap; margin-left: 12px;">
+                        {% if item.is_correct %}Correct{% else %}Incorrect{% endif %}
+                    </span>
+                </div>
+                {% if item.selected_answer %}
+                <p class="text-muted" style="margin-bottom: 4px;">
+                    Your answer: <strong>{{ item.selected_answer.text }}</strong>
+                </p>
+                {% else %}
+                <p class="text-muted" style="margin-bottom: 4px;">
+                    Your answer: <em>(not answered)</em>
+                </p>
+                {% endif %}
+                {% if not item.is_correct and item.correct_answer %}
+                <p style="color: var(--color-success);">
+                    Correct answer: <strong>{{ item.correct_answer.text }}</strong>
+                </p>
+                {% endif %}
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+
+    <!-- Actions -->
+    <div style="margin-top: 24px; display: flex; gap: 12px; justify-content: center; flex-wrap: wrap;">
+        <a href="{% url 'student:quiz_history' quiz.id %}" class="btn btn-outline">Back to Quiz History</a>
+        <a href="{% url 'student:dashboard' %}" class="btn btn-primary">Back to Dashboard</a>
+    </div>
+</div>
+{% endblock %}

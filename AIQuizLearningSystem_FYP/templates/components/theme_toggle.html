@@ -1,0 +1,17 @@
+{% comment %}
+Reusable theme toggle. One <svg> whose contents are populated by JS based on
+the active theme — avoids CSS display-toggling (which can get clobbered by
+stale caches or conflicting rules).
+
+Pass `floating=True` via {% include ... with floating=True %} to pin it to the
+top-right — used on auth pages that have no navbar.
+{% endcomment %}
+<button type="button"
+        class="theme-toggle{% if floating %} theme-toggle-floating{% endif %}"
+        aria-label="Toggle dark mode"
+        title="Toggle dark mode"
+        onclick="toggleTheme()">
+    <svg class="theme-toggle-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <!-- icon is injected by applyThemeIcon() in main.js -->
+    </svg>
+</button>

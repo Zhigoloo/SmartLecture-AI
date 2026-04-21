@@ -1,0 +1,105 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Analytics Overview - SmartLecture AI{% endblock %}
+
+{% block content %}
+<div class="page-container">
+    <h2 class="page-title">Analytics Overview</h2>
+
+    <!-- Per-Quiz Breakdown -->
+    <div class="card">
+        <div class="card-header" style="padding: 16px 24px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px;">
+            <h3 class="card-title" style="margin: 0;">Quiz Breakdown</h3>
+            <div style="position: relative; min-width: 220px;">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--color-gray-400)" stroke-width="2"
+                     style="position: absolute; left: 10px; top: 50%; transform: translateY(-50%); pointer-events: none;">
+                    <circle cx="11" cy="11" r="8"></circle>
+                    <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                </svg>
+                <input type="text" id="quizSearch" placeholder="Search quizzes..."
+                       style="width: 100%; padding: 8px 12px 8px 32px; font-size: 0.85rem; border: 1px solid var(--color-gray-200); border-radius: var(--border-radius); outline: none; transition: border-color 0.2s;"
+                       onfocus="this.style.borderColor='var(--color-primary)'"
+                       onblur="this.style.borderColor='var(--color-gray-200)'"
+                       oninput="filterQuizRows()">
+            </div>
+        </div>
+
+        <div class="table-container">
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>Quiz Title</th>
+                        <th class="text-center">Questions</th>
+                        <th class="text-center">Attempts</th>
+                        <th class="text-center">Avg Score</th>
+                        <th class="text-center">Highest</th>
+                        <th class="text-center">Pass Rate</th>
+                        <th class="text-center">Details</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for stat in quiz_stats %}
+                    <tr class="quiz-row" data-title="{{ stat.quiz.title|lower }}">
+                        <td class="font-medium">{{ stat.quiz.title|truncatewords:8 }}</td>
+                        <td class="text-center text-muted">{{ stat.question_count }}</td>
+                        <td class="text-center text-muted">{{ stat.attempt_count }}</td>
+                        <td class="text-center">
+                            {% if stat.avg_score is not None %}
+                            <span class="badge {% if stat.avg_score >= 70 %}badge-success{% elif stat.avg_score >= 50 %}badge-draft{% else %}badge-error{% endif %}">
+                                {{ stat.avg_score }}%
+                            </span>
+                            {% else %}
+                            <span class="text-muted">--</span>
+                            {% endif %}
+                        </td>
+                        <td class="text-center">
+                            {% if stat.high_score is not None %}
+                            <span style="font-weight: 600;">{{ stat.high_score }}%</span>
+                            {% else %}
+                            <span class="text-muted">--</span>
+                            {% endif %}
+                        </td>
+                        <td class="text-center">
+                            {% if stat.pass_rate is not None %}
+                            <span style="font-weight: 500; color: {% if stat.pass_rate >= 70 %}var(--color-success){% elif stat.pass_rate >= 50 %}var(--color-warning){% else %}var(--color-error){% endif %};">
+                                {{ stat.pass_rate }}%
+                            </span>
+                            {% else %}
+                            <span class="text-muted">--</span>
+                            {% endif %}
+                        </td>
+                        <td class="text-center">
+                            <a href="{% url 'teacher:analytics' stat.quiz.id %}" class="btn-icon" title="View Details">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16">
+                                    <line x1="18" y1="20" x2="18" y2="10"></line>
+                                    <line x1="12" y1="20" x2="12" y2="4"></line>
+                                    <line x1="6" y1="20" x2="6" y2="14"></line>
+                                </svg>
+                            </a>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="7" class="text-center text-muted" style="padding: 24px;">No quizzes yet. <a href="{% url 'teacher:upload_notes' %}">Create your first quiz</a></td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function filterQuizRows() {
+    var query = document.getElementById('quizSearch').value.toLowerCase();
+    var rows = document.querySelectorAll('.quiz-row');
+    rows.forEach(function(row) {
+        var title = row.getAttribute('data-title');
+        row.style.display = title.indexOf(query) !== -1 ? '' : 'none';
+    });
+}
+</script>
+{% endblock %}

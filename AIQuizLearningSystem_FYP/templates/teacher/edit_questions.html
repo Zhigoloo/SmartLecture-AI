@@ -1,0 +1,236 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Edit Questions - SmartLecture AI{% endblock %}
+
+{% block extra_css %}
+<style>
+    .questions-list .question-card {
+        display: block !important;
+    }
+</style>
+{% endblock %}
+{% block content %}
+<div class="page-container">
+    <div class="page-header">
+        <div>
+            <h2 class="page-title">Review & Edit Questions</h2>
+            <p class="page-subtitle">Review AI-generated questions and make any necessary adjustments</p>
+        </div>
+        <button type="button" class="btn btn-secondary" onclick="addNewQuestion()">
+            <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <line x1="12" y1="5" x2="12" y2="19"></line>
+                <line x1="5" y1="12" x2="19" y2="12"></line>
+            </svg>
+            Add Question
+        </button>
+    </div>
+
+    <!-- Share Section (shown when quiz is published) -->
+    {% if quiz.status == 'published' %}
+    <div class="card" style="padding: 20px 24px; margin-bottom: 24px; border-left: 4px solid var(--color-success);">
+        <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 16px;">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--color-success)" stroke-width="2">
+                <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+                <polyline points="22 4 12 14.01 9 11.01"></polyline>
+            </svg>
+            <span style="font-weight: 600; color: var(--color-success);">Quiz Published</span>
+        </div>
+        <p class="text-muted" style="font-size: 0.85rem; margin-bottom: 12px;">Share this quiz with your students using either method:</p>
+        <div style="display: flex; gap: 16px; flex-wrap: wrap;">
+            <!-- Access Code -->
+            <div style="flex: 1; min-width: 200px;">
+                <label class="text-muted" style="font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.5px; display: block; margin-bottom: 4px;">Access Code</label>
+                <div style="display: flex; align-items: center; gap: 8px;">
+                    <code id="accessCode" style="font-size: 1.25rem; font-weight: 700; letter-spacing: 3px; background: var(--color-gray-50); padding: 8px 16px; border-radius: var(--border-radius); border: 1px solid var(--color-gray-200);">{{ quiz.access_code }}</code>
+                    <button type="button" class="btn-icon" onclick="copyToClipboard('{{ quiz.access_code }}', this)" title="Copy code">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+                    </button>
+                </div>
+            </div>
+            <!-- Share Link -->
+            <div style="flex: 2; min-width: 280px;">
+                <label class="text-muted" style="font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.5px; display: block; margin-bottom: 4px;">Share Link</label>
+                <div style="display: flex; align-items: center; gap: 8px;">
+                    <input type="text" id="shareLink" value="{{ request.scheme }}://{{ request.get_host }}{% url 'student:join_link' quiz.share_token %}" readonly
+                        style="flex: 1; padding: 8px 12px; font-size: 0.85rem; background: var(--color-gray-50); border: 1px solid var(--color-gray-200); border-radius: var(--border-radius); color: var(--color-gray-600);">
+                    <button type="button" class="btn-icon" onclick="copyToClipboard(document.getElementById('shareLink').value, this)" title="Copy link">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <form method="post" action="{% url 'teacher:save_quiz' %}" id="questionsForm">
+        {% csrf_token %}
+        
+        <input type="hidden" name="quiz_id" value="{{ quiz.id }}">
+        <input type="hidden" name="deleted_questions" id="deletedQuestions" value="">
+
+        <!-- Quiz Settings -->
+        <div class="card" style="padding: 20px 24px; margin-bottom: 24px;">
+            <h3 class="card-title" style="margin-bottom: 16px;">Quiz Settings</h3>
+            <div class="form-group" style="margin-bottom: 16px;">
+                <label for="quiz_title" class="form-label">Quiz Title</label>
+                <input
+                    type="text"
+                    id="quiz_title"
+                    name="quiz_title"
+                    value="{{ quiz.title }}"
+                    class="form-input"
+                    placeholder="Enter quiz title"
+                    required
+                >
+            </div>
+            <div style="display: flex; gap: 24px; flex-wrap: wrap;">
+                <div class="form-group" style="flex: 1; min-width: 200px; margin-bottom: 0;">
+                    <label for="time_limit" class="form-label">Time Limit (minutes)</label>
+                    <input
+                        type="number"
+                        id="time_limit"
+                        name="time_limit"
+                        value="{{ quiz.time_limit }}"
+                        min="1"
+                        max="180"
+                        class="form-input"
+                        style="max-width: 200px;"
+                        required
+                    >
+                    <small class="form-hint">How long students have to complete the quiz</small>
+                </div>
+                <div class="form-group" style="flex: 1; min-width: 200px; margin-bottom: 0;">
+                    <label for="pass_percentage" class="form-label">Pass Percentage (%)</label>
+                    <input
+                        type="number"
+                        id="pass_percentage"
+                        name="pass_percentage"
+                        value="{{ quiz.pass_percentage }}"
+                        min="1"
+                        max="100"
+                        class="form-input"
+                        style="max-width: 200px;"
+                        required
+                    >
+                    <small class="form-hint">Minimum score needed to pass</small>
+                </div>
+            </div>
+        </div>
+
+        <div class="questions-list" id="questionsList">
+            {% for question in questions %}
+            <div class="question-card" data-question-id="{{ question.id }}">
+                <div class="question-header">
+                    <div class="question-number">{{ forloop.counter }}</div>
+                    <div class="question-content">
+                        <input 
+                            type="text" 
+                            name="question_text_{{ question.id }}" 
+                            value="{{ question.text }}" 
+                            class="question-input"
+                            required
+                        >
+                        
+                        <div class="options-list">
+                            {% for option in question.options.all %}
+                            <div class="option-item {% if option.is_correct %}option-correct{% endif %}">
+                                <input 
+                                    type="radio" 
+                                    name="correct_answer_{{ question.id }}" 
+                                    value="{{ forloop.counter0 }}"
+                                    id="q{{ question.id }}_opt{{ forloop.counter0 }}"
+                                    {% if option.is_correct %}checked{% endif %}
+                                    required
+                                >
+                                <input 
+                                    type="text" 
+                                    name="option_{{ question.id }}_{{ forloop.counter0 }}" 
+                                    value="{{ option.text }}"
+                                    class="option-input"
+                                    required
+                                >
+                                <label for="q{{ question.id }}_opt{{ forloop.counter0 }}" class="sr-only">Correct answer</label>
+                                {% if option.is_correct %}
+                                <span class="correct-badge">Correct Answer</span>
+                                {% endif %}
+                            </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                    
+                    <div class="question-actions">
+                        <button type="button" class="btn-icon" onclick="editQuestion({{ question.id }})" title="Edit">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
+                                <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
+                            </svg>
+                        </button>
+                        <button type="button" class="btn-icon btn-danger" onclick="deleteQuestion({{ question.id }})" title="Delete">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <polyline points="3 6 5 6 21 6"></polyline>
+                                <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                            </svg>
+                        </button>
+                    </div>
+                </div>
+            </div>
+            {% empty %}
+            <p class="text-center text-muted">No questions generated yet.</p>
+            {% endfor %}
+        </div>
+
+        <!-- Action Buttons -->
+        <div class="form-actions">
+            <a href="{% url 'teacher:upload_notes' %}" class="btn btn-outline">Cancel</a>
+            <button type="submit" name="action" value="save_draft" class="btn btn-secondary">Save as Draft</button>
+            <button type="submit" name="action" value="publish" class="btn btn-success">
+                <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+                    <polyline points="22 4 12 14.01 9 11.01"></polyline>
+                </svg>
+                Publish Quiz
+            </button>
+        </div>
+    </form>
+</div>
+
+<script>
+function deleteQuestion(questionId) {
+    if (confirm('Are you sure you want to delete this question?')) {
+        const deletedField = document.getElementById('deletedQuestions');
+        const current = deletedField.value;
+        deletedField.value = current ? current + ',' + questionId : String(questionId);
+
+        const questionCard = document.querySelector(`[data-question-id="${questionId}"]`);
+        questionCard.remove();
+        renumberQuestions();
+    }
+}
+
+function editQuestion(questionId) {
+    // Toggle edit mode for specific question
+    const questionCard = document.querySelector(`[data-question-id="${questionId}"]`);
+    questionCard.classList.toggle('editing');
+}
+
+function addNewQuestion() {
+    window.location.href = '{% url "teacher:add_question" quiz.id %}';
+}
+
+function copyToClipboard(text, btn) {
+    navigator.clipboard.writeText(text).then(function() {
+        const origHTML = btn.innerHTML;
+        btn.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="var(--color-success)" stroke-width="2" width="16" height="16"><polyline points="20 6 9 17 4 12"></polyline></svg>';
+        setTimeout(function() { btn.innerHTML = origHTML; }, 1500);
+    });
+}
+
+function renumberQuestions() {
+    const questions = document.querySelectorAll('.question-number');
+    questions.forEach((num, index) => {
+        num.textContent = index + 1;
+    });
+}
+</script>
+{% endblock %}

@@ -1,0 +1,159 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}My Quizzes - SmartLecture AI{% endblock %}
+
+{% block content %}
+<div class="page-container">
+    <div class="page-header">
+        <h2 class="page-title">My Quizzes</h2>
+        <a href="{% url 'teacher:upload_notes' %}" class="btn btn-primary">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <line x1="12" y1="5" x2="12" y2="19"></line>
+                <line x1="5" y1="12" x2="19" y2="12"></line>
+            </svg>
+            New Quiz
+        </a>
+    </div>
+
+    <!-- Search & Filters -->
+    <div class="card" style="padding: 16px 20px; margin-bottom: 20px;">
+        <form method="get" action="{% url 'teacher:my_quizzes' %}" id="filterForm">
+            <div style="display: flex; gap: 12px; flex-wrap: wrap; align-items: flex-end;">
+                <!-- Search -->
+                <div style="flex: 2; min-width: 200px;">
+                    <label class="form-label" style="font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 4px;">Search</label>
+                    <div style="position: relative;">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--color-gray-400)" stroke-width="2"
+                             style="position: absolute; left: 12px; top: 50%; transform: translateY(-50%); pointer-events: none;">
+                            <circle cx="11" cy="11" r="8"></circle>
+                            <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                        </svg>
+                        <input type="text" name="q" value="{{ search }}" placeholder="Search by quiz title..."
+                               class="form-input" style="padding-left: 36px;">
+                    </div>
+                </div>
+
+                <!-- Date From -->
+                <div style="flex: 1; min-width: 150px;">
+                    <label class="form-label" style="font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 4px;">From</label>
+                    <input type="date" name="date_from" value="{{ date_from }}" class="form-input">
+                </div>
+
+                <!-- Date To -->
+                <div style="flex: 1; min-width: 150px;">
+                    <label class="form-label" style="font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 4px;">To</label>
+                    <input type="date" name="date_to" value="{{ date_to }}" class="form-input">
+                </div>
+
+                <!-- Status -->
+                <div style="flex: 1; min-width: 130px;">
+                    <label class="form-label" style="font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 4px;">Status</label>
+                    <select name="status" class="form-input">
+                        <option value="">All</option>
+                        <option value="draft" {% if status_filter == 'draft' %}selected{% endif %}>Draft</option>
+                        <option value="published" {% if status_filter == 'published' %}selected{% endif %}>Published</option>
+                    </select>
+                </div>
+
+                <!-- Buttons -->
+                <div style="display: flex; gap: 8px;">
+                    <button type="submit" class="btn btn-primary" style="padding: 9px 16px;">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"></polygon>
+                        </svg>
+                        Filter
+                    </button>
+                    {% if search or date_from or date_to or status_filter %}
+                    <a href="{% url 'teacher:my_quizzes' %}" class="btn btn-outline" style="padding: 9px 16px;">Clear</a>
+                    {% endif %}
+                </div>
+            </div>
+        </form>
+    </div>
+
+    <!-- Active Filters -->
+    {% if search or date_from or date_to or status_filter %}
+    <div style="display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 16px; align-items: center;">
+        <span class="text-muted" style="font-size: 0.85rem;">Active filters:</span>
+        {% if search %}
+        <span class="badge badge-draft" style="font-size: 0.8rem;">Search: "{{ search }}"</span>
+        {% endif %}
+        {% if date_from %}
+        <span class="badge badge-draft" style="font-size: 0.8rem;">From: {{ date_from }}</span>
+        {% endif %}
+        {% if date_to %}
+        <span class="badge badge-draft" style="font-size: 0.8rem;">To: {{ date_to }}</span>
+        {% endif %}
+        {% if status_filter %}
+        <span class="badge badge-draft" style="font-size: 0.8rem;">Status: {{ status_filter|title }}</span>
+        {% endif %}
+        <span class="text-muted" style="font-size: 0.85rem;">({{ quizzes|length }} result{{ quizzes|length|pluralize }})</span>
+    </div>
+    {% endif %}
+
+    <!-- Quizzes Table -->
+    <div class="card">
+        <div class="table-container">
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>Quiz Title</th>
+                        <th>Status</th>
+                        <th>Questions</th>
+                        <th>Access Code</th>
+                        <th>Created</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for quiz in quizzes %}
+                    <tr>
+                        <td class="font-medium">{{ quiz.title }}</td>
+                        <td>
+                            <span class="badge badge-{{ quiz.status }}">
+                                {{ quiz.get_status_display }}
+                            </span>
+                        </td>
+                        <td class="text-muted">{{ quiz.questions.count }} questions</td>
+                        <td>
+                            {% if quiz.status == 'published' %}
+                            <code style="font-weight: 600; letter-spacing: 1px; background: var(--color-gray-50); padding: 2px 8px; border-radius: 4px;">{{ quiz.access_code }}</code>
+                            {% else %}
+                            <span class="text-muted">--</span>
+                            {% endif %}
+                        </td>
+                        <td class="text-muted">{{ quiz.created_at|date:"M d, Y" }}</td>
+                        <td>
+                            <a href="{% url 'teacher:edit_questions' quiz.id %}" class="btn-icon" title="Edit">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
+                                    <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
+                                </svg>
+                            </a>
+                            <a href="{% url 'teacher:analytics' quiz.id %}" class="btn-icon" title="Analytics">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <line x1="18" y1="20" x2="18" y2="10"></line>
+                                    <line x1="12" y1="20" x2="12" y2="4"></line>
+                                    <line x1="6" y1="20" x2="6" y2="14"></line>
+                                </svg>
+                            </a>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="6" class="text-center text-muted" style="padding: 48px 24px;">
+                            {% if search or date_from or date_to or status_filter %}
+                            No quizzes match your filters. <a href="{% url 'teacher:my_quizzes' %}">Clear filters</a>
+                            {% else %}
+                            No quizzes yet. <a href="{% url 'teacher:upload_notes' %}">Create your first quiz</a>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

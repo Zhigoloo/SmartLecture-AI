@@ -1,0 +1,33 @@
+{% load static %}
+
+<header class="navbar">
+    <div class="navbar-container">
+        <h1 class="navbar-title">SmartLecture AI</h1>
+        
+        <div class="navbar-profile" style="display: flex; align-items: center;">
+            {% include 'components/theme_toggle.html' %}
+            <div class="profile-dropdown" onclick="toggleDropdown()">
+                <div class="profile-avatar">
+                    <svg class="icon-user" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                        <circle cx="12" cy="7" r="4"></circle>
+                    </svg>
+                </div>
+                <div class="profile-info">
+                    <div class="profile-name">{{ user.get_full_name|default:user.username }}</div>
+                    <div class="profile-role">{{ user.role|title }}</div>
+                </div>
+                <svg class="icon-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <polyline points="6 9 12 15 18 9"></polyline>
+                </svg>
+            </div>
+            
+            <div class="dropdown-menu" id="profileDropdown">
+                {# <a href="{% url 'profile' %}" class="dropdown-item">Profile</a> #}
+                {# <a href="{% url 'settings' %}" class="dropdown-item">Settings</a> #}
+                <hr class="dropdown-divider">
+                <a href="{% url 'logout' %}" class="dropdown-item">Logout</a>
+            </div>
+        </div>
+    </div>
+</header>

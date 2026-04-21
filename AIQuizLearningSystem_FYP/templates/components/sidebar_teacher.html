@@ -1,0 +1,25 @@
+{% load static %}
+
+<aside class="sidebar">
+  <nav class="sidebar-nav">
+    <a href="{% url 'teacher:dashboard' %}"
+       class="sidebar-link {% if request.resolver_match.url_name == 'dashboard' %}active{% endif %}">
+      Dashboard
+    </a>
+
+    <a href="{% url 'teacher:upload_notes' %}"
+       class="sidebar-link {% if request.resolver_match.url_name == 'upload_notes' %}active{% endif %}">
+      Upload Lecture Notes
+    </a>
+
+    <a href="{% url 'teacher:my_quizzes' %}"
+       class="sidebar-link {% if request.resolver_match.url_name == 'my_quizzes' %}active{% endif %}">
+      My Quizzes
+    </a>
+
+    <a href="{% url 'teacher:analytics_overview' %}"
+       class="sidebar-link {% if request.resolver_match.url_name == 'analytics_overview' or request.resolver_match.url_name == 'analytics' %}active{% endif %}">
+      Analytics
+    </a>
+  </nav>
+</aside>
