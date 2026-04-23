@@ -149,13 +149,6 @@ Visit `http://127.0.0.1:8000` in your browser.
 | `/admin/` | Django admin panel |
 
 ---
-
-## Screenshots
-
-> Add screenshots here after deployment.
-
----
-
 ## License
 
 This project was built as a Final Year Project (FYP). All rights reserved.
