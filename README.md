@@ -119,15 +119,7 @@ Visit `http://127.0.0.1:8000` in your browser.
 
 ## Deployment (PythonAnywhere)
 
-1. Push to GitHub, then clone inside a PythonAnywhere Bash console
-2. Create a virtualenv: `mkvirtualenv --python=python3.12 smartlecture-env`
-3. `pip install django anthropic PyMuPDF python-docx whitenoise`
-4. In `settings.py`: set `DEBUG = False`, add your domain to `ALLOWED_HOSTS`, set `STATIC_ROOT`
-5. Run `python manage.py collectstatic` and `python manage.py migrate`
-6. Configure the Web tab: point the WSGI file at your project, set the virtualenv path
-7. Add a `/static/` → `staticfiles/` mapping in the Static Files section
-8. Set `ANTHROPIC_API_KEY` as an environment variable
-9. Reload the web app
+The website is avaible to try :https://kondierild.pythonanywhere.com/
 
 ---
 
